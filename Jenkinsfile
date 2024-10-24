@@ -5,6 +5,7 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        PATH = "${PATH}:/usr/local/bin"  // Add this line to ensure Terraform is in PATH
     }
 
     agent any
@@ -20,11 +21,20 @@ pipeline {
             }
         }
 
-        stage('Plan') {
+        stage('Terraform Init') {  // Split into separate stages for better error handling
             steps {
                 script {
                     dir("terraform") {
                         sh 'terraform init'
+                    }
+                }
+            }
+        }
+
+        stage('Plan') {
+            steps {
+                script {
+                    dir("terraform") {
                         sh 'terraform plan -out=tfplan'
                         sh 'terraform show -no-color tfplan > tfplan.txt'
                     }
@@ -55,6 +65,12 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()  // Clean workspace after pipeline
         }
     }
 }
