@@ -5,11 +5,9 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        PATH = "${PATH}:/usr/local/bin"  // Add this line to ensure Terraform is in PATH
+        PATH = "C:\\terraform;${PATH}"  // Add Terraform path
     }
-
     agent any
-
     stages {
         stage('Checkout') {
             steps {
@@ -20,28 +18,25 @@ pipeline {
                 }
             }
         }
-
-        stage('Terraform Init') {  // Split into separate stages for better error handling
+        stage('Terraform Init') {
             steps {
                 script {
                     dir("terraform") {
-                        sh 'terraform init'
+                        sh 'C:\\terraform\\terraform init'  // Full path to Terraform
                     }
                 }
             }
         }
-
         stage('Plan') {
             steps {
                 script {
                     dir("terraform") {
-                        sh 'terraform plan -out=tfplan'
-                        sh 'terraform show -no-color tfplan > tfplan.txt'
+                        sh 'C:\\terraform\\terraform plan -out=tfplan'
+                        sh 'C:\\terraform\\terraform show -no-color tfplan > tfplan.txt'
                     }
                 }
             }
         }
-
         stage('Approval') {
             when {
                 not {
@@ -56,21 +51,20 @@ pipeline {
                 }
             }
         }
-
         stage('Apply') {
             steps {
                 script {
                     dir("terraform") {
-                        sh 'terraform apply -input=false tfplan'
+                        sh 'C:\\terraform\\terraform apply -input=false tfplan'
                     }
                 }
             }
         }
     }
-
     post {
         always {
             cleanWs()  // Clean workspace after pipeline
         }
     }
 }
+
